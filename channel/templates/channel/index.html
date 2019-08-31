@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js" integrity="sha256-qSIshlknROr4J8GMHRlW3fGKrPki733tLq+qeMCR05Q=" crossorigin="anonymous"></script>
+
+    <script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+
+    <title>Page Title</title>
+</head>
+<body>
+    <div>
+        <p id="server_count">서버 개수 : {{ servers.Count }}
+            {% if servers.state == 0 %}
+                green
+            {% elif servers.state == 1 %}
+                yellow
+            {% elif servers.state == 2 %}
+                red
+            {% endif %}
+        </p>
+    </div>
+
+    <canvas id="myChart1" width="800" height="400"></canvas>
+    <canvas id="myChart2" width="800" height="400"></canvas>
+
+    <form method="post" action="#">
+        <input type="number" name="serverCount" min="1" max="100" value="{{ servers.Count }}">
+
+        <input  type="submit" value="Submit">
+    </form>
+
+    <div id="a2">
+
+    </div>
+
+</body>
+
+<script>
+var ctx1 = document.getElementById('myChart1');
+var ctx2 = document.getElementById('myChart2');
+var server_count = document.getElementById('server_count');
+var server_state = document.getElementById('server_state');
+
+function get_ms() {
+    let date = new Date();
+    return date.getMinutes().toString() + ":" + date.getSeconds().toString();
+}
+
+var ColorList = [
+    'rgba(255,0,0, 0.2)',
+    'rgba(0, 255, 0, 0.2)',
+    'rgba(0, 0, 255, 0.2)',
+    'rgba(255, 255, 0, 0.2)',
+    'rgba(0, 255, 255, 0.2)',
+    'rgba(255, 0, 255, 0.2)',
+    'rgba(192, 192, 192, 0.2)',
+    'rgba(128, 0, 0, 0.2)',
+    'rgba(128, 128, 0, 0.2)',
+    'rgba(0, 128, 0, 0.2)',
+    'rgba(128, 0, 128, 0.2)',
+    'rgba(0, 128, 128, 0.2)',
+    'rgba(0, 0, 128, 0.2)',
+];
+
+var option1 = {
+        responsive: true,
+            title: {
+            display: true,
+            text: 'Client Count'
+        },
+        tooltips: {
+            mode: 'index',
+            intersect: false,
+        },
+        hover: {
+            mode: 'nearest',
+            intersect: true
+        },
+        scales: {
+            xAxes: [{
+            display: true,
+            scaleLabel: {
+                display: true,
+                labelString: 'second'
+                }
+            }],
+            yAxes: [{
+                display: true,
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Client'
+                }
+            }]
+        }
+    };
+var option2 = {
+        responsive: true,
+            title: {
+            display: true,
+            text: 'RPM Chart'
+        },
+        tooltips: {
+            mode: 'index',
+            intersect: false,
+        },
+        hover: {
+            mode: 'nearest',
+            intersect: true
+        },
+        scales: {
+            xAxes: [{
+            display: true,
+            scaleLabel: {
+                display: true,
+                labelString: 'second'
+                }
+            }],
+            yAxes: [{
+                display: true,
+                scaleLabel: {
+                    display: true,
+                    labelString: 'RPM'
+                }
+            }]
+        }
+    };
+
+var emtpy_data = [0];
+var data1 = { };
+var data2 = { };
+var config1 = {
+    type: 'line',
+    data: {
+        labels: [get_ms()],
+        datasets: null
+    },
+    options:option1
+};
+var config2 = {
+    type: 'line',
+    data: {
+        labels: [get_ms()],
+        datasets: null
+    },
+    options:option2
+};
+
+var channel_list = [{"name": "chatting", "Client_count": 3, "RPM": 10}, {"name": "channel", "Client_count": 4, "RPM": 20}, {"name": "lobby", "Client_count": 10, "RPM": 10}];
+console.log("channel_list", channel_list);
+let total_Client = 0, total_RPM = 0;
+{% for data in channels %}
+    data1['{{ data.name }}'] = {
+        data: [{{ data.Client_count }}],
+        borderColor: ColorList[{{ forloop.counter0 }}],
+        fill: false,
+    }
+    total_Client += {{ data.Client_count }};
+    data2['{{ data.name }}'] = {
+        data: [{{ data.RPM }}],
+        borderColor: ColorList[{{ forloop.counter0 }}],
+        fill: false,
+    }
+    total_RPM += {{ data.RPM }};
+{% endfor %}
+
+data1['total'] = {
+    data: [total_Client],
+    borderColor: ColorList[ColorList.length-1],
+    fill: false,
+};
+
+data2['total'] = {
+    data: [total_RPM],
+    borderColor: ColorList[ColorList.length-1],
+    fill: false,
+};
+function update_date(channels) {
+    let names = ['total'];
+    let key_list = Object.keys(data1);
+    let total_Client = 0, total_RPM = 0;
+
+    for(let ch in channels )
+    {
+        total_Client += channels[ch]['Client_count'];
+        total_RPM += channels[ch]['RPM'];
+
+        if (data1[channels[ch]['name']] == undefined) {
+            console.log(channels[ch], data1[channels[ch]['name']]);
+            console.log("================================");
+            names.push(ch['name']);
+            let tdata1 = JSON.parse(JSON.stringify( emtpy_data ));
+            tdata1.push(channels[ch]['Client_count']);
+            let tdata2 = JSON.parse(JSON.stringify( emtpy_data ));
+            tdata2.push(channels[ch]['RPM']);
+
+            data1[channels[ch]['name']] = {
+                data: tdata1,
+                borderColor: ColorList[ColorList.length - 2],
+                fill: false,
+            };
+            data2[channels[ch]['name']] = {
+                data: tdata2,
+                borderColor: ColorList[ColorList.length - 2],
+                fill: false,
+            };
+            console.log(data1);
+            console.log(data2);
+
+        }
+        else {
+            names.push(channels[ch]['name']);
+            data1[channels[ch]['name']].data.push(channels[ch]['Client_count']);
+            data2[channels[ch]['name']].data.push(channels[ch]['RPM']);
+        }
+    }
+    data1['total'].data.push(total_Client);
+    data2['total'].data.push(total_RPM);
+
+    if(emtpy_data.length < data1['total'].data.length)
+        emtpy_data.push(0);
+
+    for(let key in key_list){
+        if (names.indexOf(key_list[key]) == -1)
+        {
+            delete data1[key_list[key]];
+            delete data2[key_list[key]];
+        }
+    }
+
+    myChart1.data.labels.push(get_ms());
+    myChart2.data.labels.push(get_ms());
+    //myChart1.data.datasets = data2set(data1);
+    //myChart2.data.datasets = data2set(data2);
+}
+
+function data2set(data) {
+    let reData = [];
+    let key_list = Object.keys(data);
+    console.log(Object.keys(data));
+    for (let key in key_list){
+        reData.push({
+            fill: false,
+            label: key_list[key],
+            data: data[key_list[key]].data,
+            borderColor: data[key_list[key]]['borderColor']
+        })
+    }
+
+    return reData;
+}
+
+function update_server(count, state){
+        server_count.innerText = "서버 개수 : " + count + " "+ state;
+    }
+
+config1.data.datasets = data2set(data1);
+config2.data.datasets = data2set(data2);
+
+var config1 = {
+    type: 'line',
+    data: {
+        labels: [get_ms()],
+        datasets: data2set(data1)
+    },
+    options:option1
+};
+var config2 = {
+    type: 'line',
+    data: {
+        labels: [get_ms()],
+        datasets: data2set(data2)
+    },
+    options:option2
+};
+var myChart1 = new Chart(ctx1, config1);
+var myChart2 = new Chart(ctx2, config2);
+
+var graph_timer = null;
+var graph_time_interval = 2000;
+function update_chart()
+{
+    //clearInterval(graph_timer);
+	{
+		$.get("get_Channel/", function(data, status){
+
+			if (status == "success")
+			{
+			    update_date(data.channels);
+				myChart1.update();
+				myChart2.update();
+			}
+
+			else
+			{
+				console.info("error");
+			}
+		});
+	}
+
+	//graph_timer1 = setInterval(update_chart, graph_time_interval);
+}
+
+//update_chart();
+
+function update_server_count()
+{
+    //clearInterval(graph_timer);
+	{
+		$.get("get_Server/", function(data, status){
+
+			if (status == "success")
+			{
+			    update_server(data.count, data.state);
+			}
+
+			else
+			{
+				console.info("error");
+			}
+		});
+	}
+
+	//graph_timer2 = setInterval(update_server_count, graph_time_interval);
+}
+
+clearInterval(graph_timer);
+
+function update(){
+    update_chart();
+    update_server_count();
+}
+graph_timer = setInterval(update, graph_time_interval);
+
+//update_server_count();
+
+
+</script>
+
+</html>
