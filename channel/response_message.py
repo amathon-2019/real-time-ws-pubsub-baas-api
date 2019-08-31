@@ -7,6 +7,6 @@ def make_channel_data(channel_name, cnt, rpm):
         'cnt': cnt,
         'rpm': rpm
     }
-    return json.dumps(message_to_json)
+    return message_to_json
 
 # TMP: channel_data
