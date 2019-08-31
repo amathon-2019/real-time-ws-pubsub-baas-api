@@ -8,8 +8,6 @@ from db_driver import redis_set_get
 load_dotenv()
 
 
-# zmq_pub_sub 미 적용
-
 class Channel:
     def __init__(self, channel_name):
         self.channel = "channels"
@@ -32,7 +30,7 @@ class Channel:
             print(f'receive {msg}')
 
     async def get_channel_list(self, app):
-        if not self.is_connected:
-            await self.connection()
+        if self.client is None:
+            await self.set_connection()
 
         return redis_set_get.get_all_hash_title(app, self.channel)

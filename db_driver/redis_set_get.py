@@ -1,8 +1,9 @@
+import os
+
 import asyncio_redis
 import asyncio_redis.connection
 import asyncio_redis.protocol
 import dotenv
-import os
 
 dotenv.load_dotenv()
 

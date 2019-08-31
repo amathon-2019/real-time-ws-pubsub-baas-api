@@ -1,7 +1,9 @@
 import asyncio
+import os
 import time
 
 import asyncio_redis
+from dotenv import load_dotenv
 from sanic import Sanic
 from sanic.response import json
 from sanic.websocket import WebSocketProtocol
@@ -11,8 +13,6 @@ from channel.channel import Channel
 from db_driver import redis_set_get
 from ws_handler.ws_send_receive import ws_send_event, receive_ws_channel
 from zmq_handler import zmq_pub_sub
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -60,8 +60,7 @@ async def subscribe_channel(request, channel_name):
 
 @app.route("/v1/channel/<channel_name>/delete", methods=["POST"])
 async def unsubscribe_channel(request, channel_name):
-    # message = response_message.ResponseMessage.make_deleted_sign(channel)
-    # await zmq_pub_sub.send_message(channel, message)
+    # deleted_sign
     del_result = await redis_set_get.del_hash_keys(app, 'channels', channel_name)
 
     if del_result != 0:
@@ -75,7 +74,8 @@ async def unsubscribe_channel(request, channel_name):
 # WebSocketServer
 @app.websocket('/channel/<channel_name>/')
 async def channel_event(request, ws, channel_name):
-    await zmq_pub_sub.publish(app.pub_server)
+    message = "test"
+    await zmq_pub_sub.publish(app.pub_server, message)
 
     channel = Channel(channel_name)
     await channel.subscribe()

@@ -1,11 +1,8 @@
-import asyncio
-import os
 from dotenv import load_dotenv
-from zmq_pubsub import PubSubServer
 
 load_dotenv()
 
 
-async def publish(connection):
+async def publish(connection, message):
 
-    await connection.publish('topic', 'header', {'msg': 'hello'})
+    await connection.publish('topic', 'header', {'msg': message})
