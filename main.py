@@ -2,9 +2,9 @@ import asyncio
 import os
 import time
 
-import asyncio_redis
 from dotenv import load_dotenv
 from sanic import Sanic
+from sanic.request import Request
 from sanic.response import json
 from sanic.websocket import WebSocketProtocol
 from zmq_pubsub import PubSubServer
@@ -12,13 +12,11 @@ from zmq_pubsub import PubSubServer
 from channel.channel import Channel
 from db_driver import redis_set_get
 from ws_handler.ws_send_receive import ws_send_event, receive_ws_channel
-from zmq_handler import zmq_pub_sub
 
 load_dotenv()
 
-
 app = Sanic(__name__)
-app: asyncio_redis.Pool
+app.pub_server: PubSubServer
 
 
 @app.listener('before_server_start')
@@ -36,7 +34,20 @@ async def close_db(app, loop):
 # HTTP GET
 @app.route("/", methods=['GET'])
 async def main(request):
-    return json({"hello": "main"})
+    message = {"test": "a"}
+    await app.pub_server.publish('b', 'exchange', message)
+    return json({"data": "1"})
+
+
+@app.route("/v1/channel/<channel_name>/publish", methods=['POST'])
+async def publish(request: Request, channel_name):
+    response: dict = request.json
+    if response:
+        if response.get('header') and response.get('body'):
+            await app.pub_server.publish(channel_name, response.get('header'), response.get('body'))
+            return json({"status": "ok"})
+
+    return json({"status": "fail"}, 403)
 
 
 @app.route("/v1/channel", methods=['GET'])
@@ -74,13 +85,11 @@ async def unsubscribe_channel(request, channel_name):
 # WebSocketServer
 @app.websocket('/channel/<channel_name>/')
 async def channel_event(request, ws, channel_name):
-    message = "test"
-    await zmq_pub_sub.publish(app.pub_server, message)
+    msg = "test"
 
     channel = Channel(channel_name)
     await channel.subscribe()
-
-    send_task = asyncio.create_task(ws_send_event(app, ws, channel))
+    send_task = asyncio.create_task(ws_send_event(app, ws, channel, msg))
     receive_task = asyncio.create_task(receive_ws_channel(channel, app, ws))
     done, pending = await asyncio.wait(
         [send_task, receive_task],

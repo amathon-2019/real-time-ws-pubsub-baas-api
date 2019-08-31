@@ -1,30 +1,30 @@
 import json
 
-from websockets import ConnectionClosed
+from websockets import ConnectionClosed, WebSocketCommonProtocol
 
+from channel.channel import Channel
 from channel.response_message import ResponseMessage
 from db_driver import redis_set_get
 
 
-async def ws_send_event(app, ws, channel):
+async def ws_send_event(app, ws, channel: Channel, msg):
+    async for event in channel.client.read_iter():
+        await ws.send(json.dumps(event.body))
+
+
+async def receive_ws_channel(channel: Channel, app, ws: WebSocketCommonProtocol):
     while True:
         try:
-            receive_data = json.loads(await ws.recv())
+            msg = await ws.recv()
+            print(f'ws recv: {msg}')
+
+            try:
+                request: dict = json.loads(msg)
+                if request.get('header') and request.get('body'):
+                    await app.pub_server.publish(channel.channel_name, request.get('header'), request.get('body'))
+            except json.JSONDecodeError:
+                pass
 
         except ConnectionClosed:
-            await channel.leave_channel(app)
-            await redis_set_get.del_hash_keys(app, "channels", channel)
-            break
-
-        else:
-            msg = ResponseMessage(receive_data)
-            await channel.send_message(msg)
-
-
-async def receive_ws_channel(channel, app, ws):
-    while True:
-        try:
-            await channel.receive_message(app, ws)
-
-        except ConnectionClosed:
+            print('ws closed')
             break
