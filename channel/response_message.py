@@ -10,5 +10,14 @@ class ResponseMessage:
             'channel': self.channel,
             'channel_list': channel_list
         }
+        return json.dumps(message_to_json)
+
+    def make_ws_event_data(self, channel_name):
+        message_to_json = {
+            'channel': self.channel,
+            'header': '',
+            'body': ''
+        }
+        return json.dumps(message_to_json)
 
     # TMP: channel_data

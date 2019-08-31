@@ -1,10 +1,14 @@
+import asyncio
+import time
+
+import asyncio_redis
 from sanic import Sanic
 from sanic.response import json
 from sanic.websocket import WebSocketProtocol
 
-from channel import response_message
+from channel.channel import Channel
 from db_driver import redis_set_get
-import asyncio_redis
+from ws_handler.ws_send_receive import ws_send_event, receive_ws_channel
 
 app = Sanic(__name__)
 app: asyncio_redis.Pool
@@ -19,15 +23,7 @@ async def setup(app, loop):
 async def close_db(app, loop):
     await app.close()
 
-
-# @app.middleware('response')
-# async def allow_cross_site(request, response):
-#     response.headers["Access-Control-Allow-Origin"] = "http://localhost:8080"
-#     response.headers["Access-Control-Allow-Credentials"] = "true"
-#     # response.headers["Access-Control-Allow-Headers"] = "*"
-
-
-# HTTP
+# HTTP GET
 @app.route("/", methods=['GET'])
 async def main(request):
     return json({"hello": "main"})
@@ -40,12 +36,12 @@ async def channel_list(request):
 
 
 # HTTP POST
-@app.route("/v1/channel/<channel>", methods=["POST"])
-async def subscribe_channel(request, channel):
-    channel_title = request.form.get('channel')
+@app.route("/v1/channel/<channel_name>", methods=["POST"])
+async def subscribe_channel(request, channel_name):
+    channel_title = request.form.get('channel_name')
 
     try:
-        await redis_set_get.set_hash_data(app, 'channels', channel, "1")
+        await redis_set_get.set_hash_data(app, 'channels', channel_title, str(time.time()))
         message = 'SUCCESS'
     except Exception as e:
         print(e)
@@ -55,12 +51,11 @@ async def subscribe_channel(request, channel):
     })
 
 
-@app.route("/v1/channel/<channel>/delete", methods=["POST"])
-async def unsubscribe_channel(request, channel):
+@app.route("/v1/channel/<channel_name>/delete", methods=["POST"])
+async def unsubscribe_channel(request, channel_name):
     # message = response_message.ResponseMessage.make_deleted_sign(channel)
     # await zmq_pub_sub.send_message(channel, message)
-    del_result = await redis_set_get.del_hash_keys(app, 'channels', [channel])
-    print(del_result)
+    del_result = await redis_set_get.del_hash_keys(app, 'channels', channel_name)
 
     # FIXME: Exception 처리가 좋을듯
     if del_result != 0:
@@ -69,7 +64,21 @@ async def unsubscribe_channel(request, channel):
         return json({"message": "FAIL"})
 
 
-# WS
+# WebSocketServer
+@app.websocket('/channel/<channel_name>/')
+async def room_chat(request, ws, channel_name):
+    channel = Channel(channel_name)
+
+    await channel.join_channel(app)
+
+    send_task = asyncio.create_task(ws_send_event(app, ws, channel))
+    receive_task = asyncio.create_task(receive_ws_channel(channel, app, ws))
+    done, pending = await asyncio.wait(
+        [send_task, receive_task],
+        return_when=asyncio.FIRST_COMPLETED
+    )
+    for task in pending:
+        task.cancel()
 
 
 if __name__ == "__main__":
