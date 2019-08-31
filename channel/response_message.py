@@ -3,7 +3,8 @@ import json
 
 class ResponseMessage:
     def __init__(self, receive_data):
-        self.channel = receive_data['channel']
+        self.channel = "channels"
+        self.channel_name = receive_data['channel_name']
 
     def make_channel_list_data(self, channel_list):
         message_to_json = {
@@ -12,11 +13,11 @@ class ResponseMessage:
         }
         return json.dumps(message_to_json)
 
-    def make_ws_event_data(self, channel_name):
+    def make_ws_event_data(self, header, body):
         message_to_json = {
-            'channel': self.channel,
-            'header': '',
-            'body': ''
+            'channel': self.channel_name,
+            'header': header,
+            'body': body
         }
         return json.dumps(message_to_json)
 

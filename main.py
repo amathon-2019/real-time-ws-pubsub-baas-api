@@ -66,7 +66,7 @@ async def unsubscribe_channel(request, channel_name):
 
 # WebSocketServer
 @app.websocket('/channel/<channel_name>/')
-async def room_chat(request, ws, channel_name):
+async def channel_event(request, ws, channel_name):
     channel = Channel(channel_name)
 
     await channel.join_channel(app)
