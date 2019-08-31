@@ -3,7 +3,6 @@ import json
 from websockets import ConnectionClosed, WebSocketCommonProtocol
 
 from channel.channel import Channel
-from channel.response_message import ResponseMessage
 from db_driver import redis_set_get
 
 
@@ -26,6 +25,7 @@ async def receive_ws_channel(channel: Channel, app, ws: WebSocketCommonProtocol)
                 pass
 
         except ConnectionClosed:
+            print('aaaa')
             await channel.client.decrease_client_cnt()
-            await redis_set_get.del_hash_keys(app, 'channels', channel.channel_name)
+            await redis_set_get.del_hash_keys(app, 'channels', [channel.channel_name])
             break

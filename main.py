@@ -5,11 +5,12 @@ import time
 from dotenv import load_dotenv
 from sanic import Sanic
 from sanic.request import Request
-from sanic.response import json
+from sanic.response import json, text
 from sanic.websocket import WebSocketProtocol
 from zmq_pubsub import PubSubServer
 
 from channel.channel import Channel
+from channel.response_message import make_channel_data
 from db_driver import redis_set_get
 from ws_handler.ws_send_receive import ws_send_event, receive_ws_channel
 
@@ -34,9 +35,7 @@ async def close_db(app, loop):
 # HTTP GET
 @app.route("/", methods=['GET'])
 async def main(request):
-    message = {"test": "a"}
-    await app.pub_server.publish('b', 'exchange', message)
-    return json({"data": "1"})
+    return text('index')
 
 
 @app.route("/v1/channel/<channel_name>/publish", methods=['POST'])
@@ -52,8 +51,25 @@ async def publish(request: Request, channel_name):
 
 @app.route("/v1/channel", methods=['GET'])
 async def channel_list(request):
-    data = await redis_set_get.get_hash_all_value(app, 'channels')
-    return json({"data": data})
+    channel_list = await redis_set_get.get_hash_all_value(app, 'channels')
+
+    result_data = []
+    for item in channel_list:
+        channel_name = item
+        client_cnt = await app.pub_server.get_channel_client_cnt(channel_name)
+        rpm = await app.pub_server.get_channel_request_cnt(channel_name)  # RPM
+
+        result_data.append(make_channel_data(channel_name, client_cnt, rpm))
+
+    return json({"data": result_data})
+
+
+@app.route("/v1/channel/<channel_name>", methods=['GET'])
+async def channel_data(request, channel_name):
+    client_cnt = await app.pub_server.get_channel_client_cnt(channel_name)
+    rpm = await app.pub_server.get_channel_request_cnt(channel_name)  # RPM
+
+    return text(make_channel_data(channel_name, client_cnt, rpm))
 
 
 # WebSocketServer
@@ -79,4 +95,4 @@ async def channel_event(request, ws, channel_name):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, protocol=WebSocketProtocol)
+    app.run(host="0.0.0.0", port=8000, protocol=WebSocketProtocol)
