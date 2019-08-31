@@ -75,8 +75,6 @@ async def channel_data(request, channel_name):
 # WebSocketServer
 @app.websocket('/channel/<channel_name>/')
 async def channel_event(request, ws, channel_name):
-    msg = "test"
-
     channel = Channel(channel_name)
     await channel.subscribe()
 
@@ -84,7 +82,7 @@ async def channel_event(request, ws, channel_name):
 
     await channel.client.increase_client_cnt()
 
-    send_task = asyncio.create_task(ws_send_event(app, ws, channel, msg))
+    send_task = asyncio.create_task(ws_send_event(ws, channel))
     receive_task = asyncio.create_task(receive_ws_channel(channel, app, ws))
     done, pending = await asyncio.wait(
         [send_task, receive_task],

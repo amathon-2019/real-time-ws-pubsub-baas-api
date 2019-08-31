@@ -6,7 +6,7 @@ from channel.channel import Channel
 from db_driver import redis_set_get
 
 
-async def ws_send_event(app, ws, channel: Channel, msg):
+async def ws_send_event(ws, channel: Channel):
     async for event in channel.client.read_iter():
         await ws.send(json.dumps(event.body))
 

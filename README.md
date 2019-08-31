@@ -1,36 +1,52 @@
 # real-time-ws-pubsub-baas-api
-real-time-ws-pubsub-baas-api by team16
+real-time-ws-pubsub-baas-api
 
 
 ## Stack
 sanic      
-aiozmq, asyncio-redis
+async, asyncio-redis
 ## Managing Channel
 
 ### HTTP
-**Channel List**
+**Channel List(GET)**
 ```
 http://{hostname}/v1/channel
 ```
-**Subscribe Channel**
+response : 
+```json
+{
+    "data": [
+        {
+            "channel_name": "a_channel",
+            "cnt": 3,
+            "rpm": 0
+        }
+    ]
+}
 ```
-http://{hostname}/v1/channel/{channel_name}/
+**Publish(POST)**
 ```
-**UnSubscribe Channel**
+http://{hostname}/v1/channel/<channel_name>/publish
 ```
-http://{hostname}/v1/channel/{channel_name}/delete
+response:
+```json
+{
+    "status": "ok"
+}
 ```
+
 ### WS
 **Channel Event**
 ```
 http://{hostname}/channel/{channel_name}/
 ```
-
-## Channel Format
+* subscribe
+* channel data set redis
+* websocket send & receive 
+response:
 ```json
- {
-    "channel": "example",
-    "header": "",
-    "body": ""
-  }
+{
+    "header":"exchange", 
+    "body": {"msg":"ok"}
+}
 ```
