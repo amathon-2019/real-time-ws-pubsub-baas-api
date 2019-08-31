@@ -25,7 +25,6 @@ async def receive_ws_channel(channel: Channel, app, ws: WebSocketCommonProtocol)
                 pass
 
         except ConnectionClosed:
-            print('aaaa')
             await channel.client.decrease_client_cnt()
             await redis_set_get.del_hash_keys(app, 'channels', [channel.channel_name])
             break
