@@ -1,4 +1,3 @@
-
 FROM python:3.7
 
 COPY requirements.txt /opt/api/requirements.txt
@@ -9,4 +8,4 @@ COPY . /opt/api
 
 EXPOSE 8000
 
-CMD python3.7 ./main.py
+CMD ["python", "main.py"]
