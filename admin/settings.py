@@ -27,7 +27,6 @@ SECRET_KEY = '1k6dwp%ih0wxdrsurdw__)!n)ny=kz@lp=l^pv^!nixc_e-%kc'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'wsps-mysql.xn--lg3bt3ss6d.com',
     'localhost',
     '127.0.0.1',
 ]
@@ -84,8 +83,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'DATA',
         'USER': 'root',
-        'PASSWORD': 'awskurghack',
-        'HOST': 'wsps-mysql.xn--lg3bt3ss6d.com',
+        'PASSWORD': '',
+        'HOST': '',
         'PORT': '3306'
     }
 }
