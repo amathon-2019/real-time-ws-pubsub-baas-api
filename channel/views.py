@@ -56,3 +56,20 @@ def update_ServerState(request, state):
 
     return HttpResponse(serverObject.state)
 
+def update_ServerCount(request, count):
+    serverObject = Servers.objects.all()[0]
+    serverObject.count = count
+    serverObject.save()
+
+    return HttpResponse(serverObject.count)
+
+def update_Channel(request, name, client, rpm):
+    ChannelObject = Channels.objects.all().filter(name=name)[0]
+    ChannelObject.Client_count = client
+    ChannelObject.RPM = rpm
+    ChannelObject.save()
+
+    return JsonResponse({'name': ChannelObject.name,
+                        'Client': ChannelObject.Client_count,
+                        'RPM': ChannelObject.RPM})
+

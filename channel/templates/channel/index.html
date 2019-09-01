@@ -196,8 +196,6 @@ function update_date(channels) {
         total_RPM += channels[ch]['RPM'];
 
         if (data1[channels[ch]['name']] == undefined) {
-            console.log(channels[ch], data1[channels[ch]['name']]);
-            console.log("================================");
             names.push(ch['name']);
             let tdata1 = JSON.parse(JSON.stringify( emtpy_data ));
             tdata1.push(channels[ch]['Client_count']);
@@ -214,12 +212,10 @@ function update_date(channels) {
                 borderColor: ColorList[ColorList.length - 2],
                 fill: false,
             };
-            console.log(data1);
-            console.log(data2);
-
         }
         else {
             names.push(channels[ch]['name']);
+
             data1[channels[ch]['name']].data.push(channels[ch]['Client_count']);
             data2[channels[ch]['name']].data.push(channels[ch]['RPM']);
         }
@@ -227,7 +223,7 @@ function update_date(channels) {
     data1['total'].data.push(total_Client);
     data2['total'].data.push(total_RPM);
 
-    if(emtpy_data.length < data1['total'].data.length)
+    if(emtpy_data.length < data1['total'].data.length && emtpy_data,length < 119)
         emtpy_data.push(0);
 
     for(let key in key_list){
@@ -342,8 +338,8 @@ function update(){
 }
 graph_timer = setInterval(update, graph_time_interval);
 
-//update_server_count();
-
+update_server_count();
+window.setTimeout('window.location.reload()', 300000);
 
 </script>
 
