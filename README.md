@@ -27,5 +27,5 @@ localhost:8000/channel/
 ```
 state 변경 url: http://localhost/channel/update_ServerState/<state>/
 server수 변경 url: http://localhost/channel/update_ServerCount/<count>/
-channel 갱신 url: http://localhost/channel/update_Channel/<name>/<client>/<rpm> 
+channel 갱신 url: http://localhost/channel/update_Channel/<name>/<client>/<rpm>/
 ```
