@@ -29,3 +29,6 @@ state 변경 url: http://localhost/channel/update_ServerState/<state>/
 server수 변경 url: http://localhost/channel/update_ServerCount/<count>/
 channel 갱신 url: http://localhost/channel/update_Channel/<name>/<client>/<rpm>/
 ```
+### page view
+<img width="641" alt="admin_page" src="https://user-images.githubusercontent.com/40608930/64088096-d2ed9300-cd7a-11e9-9331-a8b189bafead.PNG">
+
