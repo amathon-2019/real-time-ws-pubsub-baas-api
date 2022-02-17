@@ -1,4 +1,4 @@
 asyncio-redis==0.15.1
-sanic==19.6.3
+sanic==20.12.6
 python-dotenv
 git+https://github.com/amathon-2019/real-time-ws-pubsub-baas-zmqpubsub-lib.git
